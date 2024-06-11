@@ -1,3 +1,7 @@
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
+
 // Basic setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -158,7 +162,7 @@ const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 scene.add(skybox);
 
 // Pointer Lock Controls
-const controls = new THREE.PointerLockControls(camera, document.body);
+const controls = new PointerLockControls(camera, document.body);
 scene.add(controls.getObject());
 
 document.addEventListener('click', () => {
