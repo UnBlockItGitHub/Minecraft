@@ -45,8 +45,8 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
     }
 }
 
+// Set up the camera position
 camera.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE * 2);
-camera.lookAt(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE / 2, WORLD_DEPTH * TILE_SIZE / 2);
 
 // Add simple lighting
 let light = new THREE.PointLight(0xffffff);
@@ -58,9 +58,113 @@ let stats = new Stats();
 stats.dom.style.display = 'none'; // Hide stats initially
 document.body.appendChild(stats.dom);
 
+// Skybox setup
+const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+const skyboxMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        topColor: { type: "c", value: new THREE.Color(0x87CEEB) }, // Light blue
+        middleColor: { type: "c", value: new THREE.Color(0xFFA500) }, // Orange
+        bottomColor: { type: "c", value: new THREE.Color(0x000000) }, // Black
+        transitionProgress: { type: "f", value: 0 }
+    },
+    vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 middleColor;
+        uniform vec3 bottomColor;
+        uniform float transitionProgress;
+        varying vec3 vWorldPosition;
+
+        void main() {
+            float height = vWorldPosition.y / 500.0 + 0.5;
+            vec3 color;
+
+            if (transitionProgress < 0.5) {
+                float t = transitionProgress * 2.0;
+                color = mix(topColor, middleColor, t);
+            } else {
+                float t = (transitionProgress - 0.5) * 2.0;
+                color = mix(middleColor, bottomColor, t);
+            }
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `,
+    side: THREE.BackSide
+});
+const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+scene.add(skybox);
+
+// Pointer Lock Controls
+const controls = new THREE.PointerLockControls(camera, document.body);
+
+document.addEventListener('click', () => {
+    controls.lock();
+});
+
+const movement = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false
+};
+
+document.addEventListener('keydown', (event) => {
+    switch (event.code) {
+        case 'KeyW':
+            movement.forward = true;
+            break;
+        case 'KeyS':
+            movement.backward = true;
+            break;
+        case 'KeyA':
+            movement.left = true;
+            break;
+        case 'KeyD':
+            movement.right = true;
+            break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch (event.code) {
+        case 'KeyW':
+            movement.forward = false;
+            break;
+        case 'KeyS':
+            movement.backward = false;
+            break;
+        case 'KeyA':
+            movement.left = false;
+            break;
+        case 'KeyD':
+            movement.right = false;
+            break;
+    }
+});
+
 // Render loop
+let startTime = Date.now();
 function animate() {
     requestAnimationFrame(animate);
+    
+    // Update skybox color transition
+    let elapsedTime = (Date.now() - startTime) / 600000; // 10 minutes in milliseconds
+    skyboxMaterial.uniforms.transitionProgress.value = (elapsedTime % 1.0);
+    
+    // Movement controls
+    const delta = 0.1;
+    if (movement.forward) controls.moveForward(delta);
+    if (movement.backward) controls.moveForward(-delta);
+    if (movement.left) controls.moveRight(-delta);
+    if (movement.right) controls.moveRight(delta);
     
     stats.update();
     renderer.render(scene, camera);
