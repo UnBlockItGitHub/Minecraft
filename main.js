@@ -53,9 +53,16 @@ let light = new THREE.PointLight(0xffffff);
 light.position.set(10, 10, 10);
 scene.add(light);
 
+// Stats setup
+let stats = new Stats();
+stats.dom.style.display = 'none'; // Hide stats initially
+document.body.appendChild(stats.dom);
+
 // Render loop
 function animate() {
     requestAnimationFrame(animate);
+    
+    stats.update();
     renderer.render(scene, camera);
 }
 animate();
@@ -65,4 +72,15 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Show/hide FPS stats on '[' key press
+window.addEventListener('keydown', (event) => {
+    if (event.key === '[') {
+        if (stats.dom.style.display === 'none') {
+            stats.dom.style.display = 'block';
+        } else {
+            stats.dom.style.display = 'none';
+        }
+    }
 });
