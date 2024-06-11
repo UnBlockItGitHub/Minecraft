@@ -17,13 +17,64 @@ const COLORS = {
     stone: 0x808080
 };
 
+// World array to keep track of blocks
+const world = Array.from({ length: WORLD_WIDTH }, () =>
+    Array.from({ length: WORLD_HEIGHT }, () =>
+        Array.from({ length: WORLD_DEPTH }, () => null)
+    )
+);
+
+// Function to create a block face
+function createFace(size, position, rotation, color) {
+    const geometry = new THREE.PlaneGeometry(size, size);
+    const material = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide });
+    const face = new THREE.Mesh(geometry, material);
+    face.position.set(position.x, position.y, position.z);
+    face.rotation.set(rotation.x, rotation.y, rotation.z);
+    return face;
+}
+
+// Function to check if a block exists at a given position
+function blockExists(x, y, z) {
+    return (
+        x >= 0 && x < WORLD_WIDTH &&
+        y >= 0 && y < WORLD_HEIGHT &&
+        z >= 0 && z < WORLD_DEPTH &&
+        world[x][y][z] !== null
+    );
+}
+
 // Function to create a block
 function createBlock(x, y, z, color) {
-    const geometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    const material = new THREE.MeshBasicMaterial({ color });
-    const block = new THREE.Mesh(geometry, material);
-    block.position.set(x * TILE_SIZE, y * TILE_SIZE, z * TILE_SIZE);
-    return block;
+    const size = TILE_SIZE;
+    const halfSize = size / 2;
+    
+    if (!blockExists(x, y, z)) {
+        const block = new THREE.Group();
+
+        // Add faces only if they are exposed
+        if (!blockExists(x, y + 1, z)) { // Top face
+            block.add(createFace(size, { x: x * size, y: y * size + halfSize, z: z * size }, { x: -Math.PI / 2, y: 0, z: 0 }, color));
+        }
+        if (!blockExists(x, y - 1, z)) { // Bottom face
+            block.add(createFace(size, { x: x * size, y: y * size - halfSize, z: z * size }, { x: Math.PI / 2, y: 0, z: 0 }, color));
+        }
+        if (!blockExists(x, y, z + 1)) { // Front face
+            block.add(createFace(size, { x: x * size, y: y * size, z: z * size + halfSize }, { x: 0, y: 0, z: 0 }, color));
+        }
+        if (!blockExists(x, y, z - 1)) { // Back face
+            block.add(createFace(size, { x: x * size, y: y * size, z: z * size - halfSize }, { x: 0, y: Math.PI, z: 0 }, color));
+        }
+        if (!blockExists(x + 1, y, z)) { // Right face
+            block.add(createFace(size, { x: x * size + halfSize, y: y * size, z: z * size }, { x: 0, y: -Math.PI / 2, z: 0 }, color));
+        }
+        if (!blockExists(x - 1, y, z)) { // Left face
+            block.add(createFace(size, { x: x * size - halfSize, y: y * size, z: z * size }, { x: 0, y: Math.PI / 2, z: 0 }, color));
+        }
+
+        world[x][y][z] = block;
+        scene.add(block);
+    }
 }
 
 // Generate the world
@@ -35,11 +86,12 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
                 color = COLORS.stone;
             } else if (y < 20) {
                 color = COLORS.dirt;
-            } else {
+            } else if (y === 20) {
                 color = COLORS.grass;
+            } else {
+                color = COLORS.dirt;
             }
-            const block = createBlock(x, y, z, color);
-            scene.add(block);
+            createBlock(x, y, z, color);
         }
     }
 }
@@ -86,12 +138,15 @@ const skyboxMaterial = new THREE.ShaderMaterial({
             float height = vWorldPosition.y / 500.0 + 0.5;
             vec3 color;
 
-            if (transitionProgress < 0.5) {
-                float t = transitionProgress * 2.0;
+            float t = transitionProgress * 4.0;
+            if (t < 1.0) {
                 color = mix(topColor, middleColor, t);
+            } else if (t < 2.0) {
+                color = mix(middleColor, bottomColor, t - 1.0);
+            } else if (t < 3.0) {
+                color = mix(bottomColor, middleColor, t - 2.0);
             } else {
-                float t = (transitionProgress - 0.5) * 2.0;
-                color = mix(middleColor, bottomColor, t);
+                color = mix(middleColor, topColor, t - 3.0);
             }
 
             gl_FragColor = vec4(color, 1.0);
@@ -141,7 +196,7 @@ function animate() {
     requestAnimationFrame(animate);
 
     // Update skybox color transition
-    const elapsedTime = (Date.now() - startTime) / 600000; // 10 minutes in milliseconds
+    const elapsedTime = (Date.now() - startTime) / 1200000; // 20 minutes in milliseconds
     skyboxMaterial.uniforms.transitionProgress.value = elapsedTime % 1.0;
 
     // Movement controls
@@ -163,15 +218,4 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Show/hide FPS stats on '[' key press
-window.addEventListener('keydown', (event) => {
-    if (event.key === '[') {
-        if (stats.dom.style.display === 'none') {
-            stats.dom.style.display = 'block';
-        } else {
-            stats.dom.style.display = 'none';
-        }
-    }
 });
