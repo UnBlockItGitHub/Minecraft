@@ -46,10 +46,11 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
 
 // Set up camera position
 camera.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE * 2);
+camera.lookAt(new THREE.Vector3(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE / 2, WORLD_DEPTH * TILE_SIZE / 2));
 
 // Add simple lighting
-let light = new THREE.PointLight(0xffffff);
-light.position.set(10, 10, 10);
+let light = new THREE.PointLight(0xffffff, 1, 100);
+light.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE / 2);
 scene.add(light);
 
 // Stats setup
@@ -105,7 +106,6 @@ scene.add(skybox);
 const controls = new THREE.PointerLockControls(camera, document.body);
 scene.add(controls.getObject());
 
-// Request pointer lock
 document.addEventListener('click', () => {
     controls.lock();
 });
