@@ -1,9 +1,4 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: #87CEEB;
-}
-canvas {
-    display: block;
-    background: #8B4513;
 }
