@@ -1,7 +1,10 @@
-// Basic setup
-let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer();
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import Stats from 'stats.js';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -19,9 +22,9 @@ const COLORS = {
 
 // Function to create a block
 function createBlock(x, y, z, color) {
-    let geometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    let material = new THREE.MeshBasicMaterial({ color: color });
-    let block = new THREE.Mesh(geometry, material);
+    const geometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    const material = new THREE.MeshBasicMaterial({ color });
+    const block = new THREE.Mesh(geometry, material);
     block.position.set(x * TILE_SIZE, y * TILE_SIZE, z * TILE_SIZE);
     return block;
 }
@@ -38,7 +41,7 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
             } else {
                 color = COLORS.grass;
             }
-            let block = createBlock(x, y, z, color);
+            const block = createBlock(x, y, z, color);
             scene.add(block);
         }
     }
@@ -49,12 +52,12 @@ camera.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD
 camera.lookAt(new THREE.Vector3(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE / 2, WORLD_DEPTH * TILE_SIZE / 2));
 
 // Add simple lighting
-let light = new THREE.PointLight(0xffffff, 1, 100);
+const light = new THREE.PointLight(0xffffff, 1, 100);
 light.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE / 2);
 scene.add(light);
 
 // Stats setup
-let stats = new Stats();
+const stats = new Stats();
 stats.dom.style.display = 'none';
 document.body.appendChild(stats.dom);
 
@@ -62,10 +65,10 @@ document.body.appendChild(stats.dom);
 const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
 const skyboxMaterial = new THREE.ShaderMaterial({
     uniforms: {
-        topColor: { type: "c", value: new THREE.Color(0x87CEEB) },
-        middleColor: { type: "c", value: new THREE.Color(0xFFA500) },
-        bottomColor: { type: "c", value: new THREE.Color(0x000000) },
-        transitionProgress: { type: "f", value: 0 }
+        topColor: { type: 'c', value: new THREE.Color(0x87CEEB) },
+        middleColor: { type: 'c', value: new THREE.Color(0xFFA500) },
+        bottomColor: { type: 'c', value: new THREE.Color(0x000000) },
+        transitionProgress: { type: 'f', value: 0 }
     },
     vertexShader: `
         varying vec3 vWorldPosition;
@@ -103,7 +106,7 @@ const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 scene.add(skybox);
 
 // Pointer Lock Controls
-const controls = new THREE.PointerLockControls(camera, document.body);
+const controls = new PointerLockControls(camera, document.body);
 scene.add(controls.getObject());
 
 document.addEventListener('click', () => {
@@ -141,8 +144,8 @@ function animate() {
     requestAnimationFrame(animate);
 
     // Update skybox color transition
-    let elapsedTime = (Date.now() - startTime) / 600000; // 10 minutes in milliseconds
-    skyboxMaterial.uniforms.transitionProgress.value = (elapsedTime % 1.0);
+    const elapsedTime = (Date.now() - startTime) / 600000; // 10 minutes in milliseconds
+    skyboxMaterial.uniforms.transitionProgress.value = elapsedTime % 1.0;
 
     // Movement controls
     const delta = 0.1;
