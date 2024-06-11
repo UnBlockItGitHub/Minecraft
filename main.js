@@ -2,20 +2,19 @@
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer();
-
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const TILE_SIZE = 1; // Size of each block
+const TILE_SIZE = 1;
 const WORLD_WIDTH = 16;
 const WORLD_DEPTH = 16;
 const WORLD_HEIGHT = 32;
 
 // Colors for different block types
 const COLORS = {
-    grass: 0x00ff00, // Green
-    dirt: 0x8B4513, // Brown
-    stone: 0x808080 // Grey
+    grass: 0x00ff00,
+    dirt: 0x8B4513,
+    stone: 0x808080
 };
 
 // Function to create a block
@@ -33,11 +32,11 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
         for (let y = 0; y < WORLD_HEIGHT; y++) {
             let color;
             if (y < 10) {
-                color = COLORS.stone; // Stone below y=10
+                color = COLORS.stone;
             } else if (y < 20) {
-                color = COLORS.dirt; // Dirt between y=10 and y=20
+                color = COLORS.dirt;
             } else {
-                color = COLORS.grass; // Grass above y=20
+                color = COLORS.grass;
             }
             let block = createBlock(x, y, z, color);
             scene.add(block);
@@ -45,7 +44,7 @@ for (let x = 0; x < WORLD_WIDTH; x++) {
     }
 }
 
-// Set up the camera position
+// Set up camera position
 camera.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE * 2);
 
 // Add simple lighting
@@ -55,16 +54,16 @@ scene.add(light);
 
 // Stats setup
 let stats = new Stats();
-stats.dom.style.display = 'none'; // Hide stats initially
+stats.dom.style.display = 'none';
 document.body.appendChild(stats.dom);
 
 // Skybox setup
 const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
 const skyboxMaterial = new THREE.ShaderMaterial({
     uniforms: {
-        topColor: { type: "c", value: new THREE.Color(0x87CEEB) }, // Light blue
-        middleColor: { type: "c", value: new THREE.Color(0xFFA500) }, // Orange
-        bottomColor: { type: "c", value: new THREE.Color(0x000000) }, // Black
+        topColor: { type: "c", value: new THREE.Color(0x87CEEB) },
+        middleColor: { type: "c", value: new THREE.Color(0xFFA500) },
+        bottomColor: { type: "c", value: new THREE.Color(0x000000) },
         transitionProgress: { type: "f", value: 0 }
     },
     vertexShader: `
@@ -104,49 +103,35 @@ scene.add(skybox);
 
 // Pointer Lock Controls
 const controls = new THREE.PointerLockControls(camera, document.body);
+scene.add(controls.getObject());
 
+// Request pointer lock
 document.addEventListener('click', () => {
     controls.lock();
 });
 
-const movement = {
-    forward: false,
-    backward: false,
-    left: false,
-    right: false
-};
+// Movement controls
+const movement = { forward: false, backward: false, left: false, right: false, up: false, down: false };
 
 document.addEventListener('keydown', (event) => {
     switch (event.code) {
-        case 'KeyW':
-            movement.forward = true;
-            break;
-        case 'KeyS':
-            movement.backward = true;
-            break;
-        case 'KeyA':
-            movement.left = true;
-            break;
-        case 'KeyD':
-            movement.right = true;
-            break;
+        case 'KeyW': movement.forward = true; break;
+        case 'KeyS': movement.backward = true; break;
+        case 'KeyA': movement.left = true; break;
+        case 'KeyD': movement.right = true; break;
+        case 'Space': movement.up = true; break;
+        case 'ShiftLeft': movement.down = true; break;
     }
 });
 
 document.addEventListener('keyup', (event) => {
     switch (event.code) {
-        case 'KeyW':
-            movement.forward = false;
-            break;
-        case 'KeyS':
-            movement.backward = false;
-            break;
-        case 'KeyA':
-            movement.left = false;
-            break;
-        case 'KeyD':
-            movement.right = false;
-            break;
+        case 'KeyW': movement.forward = false; break;
+        case 'KeyS': movement.backward = false; break;
+        case 'KeyA': movement.left = false; break;
+        case 'KeyD': movement.right = false; break;
+        case 'Space': movement.up = false; break;
+        case 'ShiftLeft': movement.down = false; break;
     }
 });
 
@@ -154,18 +139,20 @@ document.addEventListener('keyup', (event) => {
 let startTime = Date.now();
 function animate() {
     requestAnimationFrame(animate);
-    
+
     // Update skybox color transition
     let elapsedTime = (Date.now() - startTime) / 600000; // 10 minutes in milliseconds
     skyboxMaterial.uniforms.transitionProgress.value = (elapsedTime % 1.0);
-    
+
     // Movement controls
     const delta = 0.1;
     if (movement.forward) controls.moveForward(delta);
     if (movement.backward) controls.moveForward(-delta);
     if (movement.left) controls.moveRight(-delta);
     if (movement.right) controls.moveRight(delta);
-    
+    if (movement.up) controls.getObject().position.y += delta;
+    if (movement.down) controls.getObject().position.y -= delta;
+
     stats.update();
     renderer.render(scene, camera);
 }
