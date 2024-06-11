@@ -6,36 +6,59 @@ let renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Load texture
-let textureLoader = new THREE.TextureLoader();
-textureLoader.load('dirt.png', function(texture) {
-    // Create a simple box geometry with the dirt texture
-    let geometry = new THREE.BoxGeometry(1, 1, 1);
-    let material = new THREE.MeshBasicMaterial({ map: texture });
-    let cube = new THREE.Mesh(geometry, material);
+const TILE_SIZE = 1; // Size of each block
+const WORLD_WIDTH = 16;
+const WORLD_DEPTH = 16;
+const WORLD_HEIGHT = 32;
 
-    scene.add(cube);
-    camera.position.z = 5;
+// Colors for different block types
+const COLORS = {
+    grass: 0x00ff00, // Green
+    dirt: 0x8B4513, // Brown
+    stone: 0x808080 // Grey
+};
 
-    // Render loop
-    function animate() {
-        requestAnimationFrame(animate);
+// Function to create a block
+function createBlock(x, y, z, color) {
+    let geometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    let material = new THREE.MeshBasicMaterial({ color: color });
+    let block = new THREE.Mesh(geometry, material);
+    block.position.set(x * TILE_SIZE, y * TILE_SIZE, z * TILE_SIZE);
+    return block;
+}
 
-        // Simple rotation animation
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-
-        renderer.render(scene, camera);
+// Generate the world
+for (let x = 0; x < WORLD_WIDTH; x++) {
+    for (let z = 0; z < WORLD_DEPTH; z++) {
+        for (let y = 0; y < WORLD_HEIGHT; y++) {
+            let color;
+            if (y < 10) {
+                color = COLORS.stone; // Stone below y=10
+            } else if (y < 20) {
+                color = COLORS.dirt; // Dirt between y=10 and y=20
+            } else {
+                color = COLORS.grass; // Grass above y=20
+            }
+            let block = createBlock(x, y, z, color);
+            scene.add(block);
+        }
     }
-    animate();
-}, undefined, function(err) {
-    console.error('An error occurred loading the texture:', err);
-});
+}
+
+camera.position.set(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE, WORLD_DEPTH * TILE_SIZE * 2);
+camera.lookAt(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE / 2, WORLD_DEPTH * TILE_SIZE / 2);
 
 // Add simple lighting
 let light = new THREE.PointLight(0xffffff);
 light.position.set(10, 10, 10);
 scene.add(light);
+
+// Render loop
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+animate();
 
 // Handle window resize
 window.addEventListener('resize', () => {
