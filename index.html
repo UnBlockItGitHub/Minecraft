@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft</title>
+    <title>3D Minecraft World</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -11,7 +11,10 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stats.js@latest"></script>
-    <script src="main.js"></script>
+    <script type="module">
+        import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/PointerLockControls.js';
+        import Stats from 'https://cdn.jsdelivr.net/npm/stats.js@latest';
+        import { createWorld, animateWorld } from './main.js';
+    </script>
 </body>
 </html>
