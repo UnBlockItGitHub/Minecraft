@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-import Stats from 'three/examples/jsm/libs/stats.module.js';
+import * as THREE from './three.module.js';
+import { PointerLockControls } from './PointerLockControls.js';
+import Stats from './stats.module.js';
 
 // Basic setup
 const scene = new THREE.Scene();
@@ -199,11 +199,10 @@ const startTime = Date.now();
 function animate() {
     requestAnimationFrame(animate);
 
-    // Update skybox color transition
-    const elapsedTime = (Date.now() - startTime) / 1200000; // 20 minutes in milliseconds
-    skyboxMaterial.uniforms.transitionProgress.value = elapsedTime % 1.0;
+    const elapsedTime = (Date.now() - startTime) / 1000;
+    const dayDuration = 20 * 60; // 20 minutes in seconds
+    skyboxMaterial.uniforms.transitionProgress.value = (elapsedTime % dayDuration) / dayDuration;
 
-    // Movement controls
     const delta = 0.1;
     if (movement.forward) controls.moveForward(delta);
     if (movement.backward) controls.moveForward(-delta);
